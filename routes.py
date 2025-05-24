@@ -1,15 +1,30 @@
-from flask import render_template, redirect, url_for, flash, request, jsonify
+from flask import Flask, render_template, redirect, url_for, flash, request, jsonify, session
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.urls import url_parse
 from app import app, csrf
 from extensions import db, limiter
-from forms import LoginForm, RegistrationForm, TransferForm, ResetPasswordRequestForm, ResetPasswordForm, DepositForm, UserEditForm, ConfirmTransferForm
+from forms import LoginForm, RegistrationForm, TransferForm, ResetPasswordRequestForm, ResetPasswordForm, DepositForm, UserEditForm, ConfirmTransferForm, ProfileForm, SetupPINForm, VerifyPINForm, ChangePINForm
 from models import User, Transaction
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired
 import os
 from functools import wraps
 import psgc_api
 import datetime
+import hashlib
+
+# Helper function to generate a unique account number
+def generate_account_number():
+    # Example: generate a 10-digit account number not already in use
+    import random
+    while True:
+        account_number = str(random.randint(10**9, 10**10 - 1))
+        if not User.query.filter_by(account_number=account_number).first():
+            return account_number
+
+# Dummy send_email function for demonstration; replace with actual implementation
+def send_email(to, subject, body):
+    # In production, integrate with an email service provider
+    print(f"Sending email to {to} with subject '{subject}' and body:\n{body}")
 
 # Context processor to provide current year to all templates
 @app.context_processor
@@ -45,6 +60,13 @@ def send_password_reset_email(user):
     reset_url = url_for('reset_password', token=token, _external=True)
     flash(f'Password reset link (would be emailed): {reset_url}')
 
+def send_verification_email(user):
+    serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+    token = serializer.dumps(user.email, salt='email-verify')
+    verify_url = url_for('verify_email', token=token, _external=True)
+    # In production, send this via email. For demo, just flash the link.
+    flash(f'Verification link (would be emailed): {verify_url}', 'info')
+
 @app.route('/')
 @app.route('/index')
 @login_required
@@ -66,31 +88,29 @@ def login():
         return redirect(url_for('index'))
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
+        # Allow login by username or email
+        user = User.query.filter(
+            (User.username == form.username.data) | (User.email == form.username.data)
+        ).first()
         
         # Check if this is an old SHA-256 password hash (exactly 64 characters)
-        # SHA-256 hashes are 64 characters long, bcrypt hashes start with $2b$
         if user and user.password_hash and len(user.password_hash) == 64 and not user.password_hash.startswith('$2b$'):
-            import hashlib
-            # Verify with old method
             sha2_hash = hashlib.sha256(form.password.data.encode()).hexdigest()
             if sha2_hash == user.password_hash:
-                # Upgrade to bcrypt
                 user.set_password(form.password.data)
                 db.session.commit()
-                # Continue with login
             else:
-                flash('Invalid username or password')
+                flash('Invalid username/email or password')
                 return redirect(url_for('login'))
         elif user is None or not user.check_password(form.password.data):
-            flash('Invalid username or password')
+            flash('Invalid username/email or password')
             return redirect(url_for('login'))
         
         # Check if user account is active (unless they're an admin or manager)
         if user.status != 'active' and not user.is_admin and not user.is_manager:
             if user.status == 'pending':
                 flash('Your account is awaiting approval from an administrator.')
-            else:  # deactivated
+            else:
                 flash('Your account has been deactivated. Please contact an administrator.')
             return redirect(url_for('login'))
             
@@ -107,18 +127,41 @@ def logout():
     return redirect(url_for('login'))
 
 @app.route('/register', methods=['GET', 'POST'])
-@limiter.limit("5 per minute")
 def register():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
+    
     form = RegistrationForm()
     if form.validate_on_submit():
         user = User(username=form.username.data, email=form.email.data, status='pending')
         user.set_password(form.password.data)
+        user.account_number = generate_account_number()
         db.session.add(user)
         db.session.commit()
-        flash('Your account has been registered and is awaiting admin approval.')
+        
+        # Generate verification token
+        # Generate verification token using itsdangerous
+        serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+        token = serializer.dumps(user.email, salt='email-verify')
+        
+        # Create verification URL
+        verify_url = url_for('verify_email', token=token, _external=True)
+        
+        # Create email body
+        email_body = render_template('email/verify_email.html', 
+                                     username=user.username, 
+                                     verify_url=verify_url)
+        
+        # Send the email
+        try:
+            send_email(user.email, 'Verify Your Email', email_body)
+            flash('Your account has been registered. Please check your email to verify your account.', 'success')
+        except Exception as e:
+            flash(f'Failed to send verification email. Error: {str(e)}', 'danger')
+            app.logger.error(f"Failed to send email: {str(e)}")
+        
         return redirect(url_for('login'))
+    
     return render_template('register.html', title='Register', form=form)
 
 @app.route('/account')
@@ -133,52 +176,93 @@ def account():
 
 @app.route('/transfer', methods=['GET', 'POST'])
 @login_required
-@limiter.limit("20 per hour")
 def transfer():
-    if current_user.status != 'active' and not current_user.is_admin and not current_user.is_manager:
-        flash('Your account is awaiting approval from an administrator.')
-        return redirect(url_for('index'))
-        
-    form = TransferForm()
-    if form.validate_on_submit():
-        # Find recipient based on transfer type
-        recipient = None
-        if form.transfer_type.data == 'username':
-            recipient = User.query.filter_by(username=form.recipient_username.data).first()
-        else:  # account
-            recipient = User.query.filter_by(account_number=form.recipient_account.data).first()
-            
-        amount = form.amount.data
-        
-        # Check for self-transfer
-        if recipient and recipient.id == current_user.id:
-            flash('You cannot transfer money to yourself.')
-            return redirect(url_for('transfer'))
-            
-        if current_user.balance < amount:
-            flash('Insufficient funds for this transfer.')
-            return redirect(url_for('transfer'))
-        
-        # Check if recipient account is active
-        if recipient.status != 'active' and not recipient.is_admin and not recipient.is_manager:
-            flash('The recipient account is not active.')
-            return redirect(url_for('transfer'))
-        
-        # Create confirm transfer form with pre-populated data
-        confirm_form = ConfirmTransferForm(
-            recipient_username=recipient.username,
-            recipient_account=recipient.account_number,
-            amount=amount,
-            transfer_type=form.transfer_type.data
-        )
-        
-        # Show confirmation page before completing transfer
-        return render_template('confirm_transfer.html', 
-                              recipient=recipient,
-                              amount=amount,
-                              form=confirm_form)
+    # Check if user has set up a PIN
+    if not current_user.pin_set:
+        flash('You need to set up a security PIN before making transfers.', 'warning')
+        return redirect(url_for('setup_pin'))
     
-    return render_template('transfer.html', title='Transfer Money', form=form)
+    form = TransferForm()
+    # Your existing transfer form validation logic
+    if form.validate_on_submit():
+        # Now session is defined and can be used
+        session['transfer_data'] = {
+            'transfer_type': form.transfer_type.data,
+            'recipient_username': form.recipient_username.data if form.transfer_type.data == 'username' else None,
+            'recipient_account': form.recipient_account.data if form.transfer_type.data == 'account' else None,
+            'amount': float(form.amount.data)
+        }
+        return redirect(url_for('verify_transfer_pin'))
+    
+    return render_template('transfer.html', form=form, current_user=current_user)
+
+@app.route('/verify_transfer_pin', methods=['GET', 'POST'])
+@login_required
+def verify_transfer_pin():
+    # Make sure there's transfer data in session
+    if 'transfer_data' not in session:
+        flash('No pending transfer to verify.', 'warning')
+        return redirect(url_for('transfer'))
+    
+    form = VerifyPINForm()
+    if form.validate_on_submit():
+        # Verify PIN
+        if current_user.check_pin(form.pin.data):
+            # PIN is correct, process the transfer
+            transfer_data = session['transfer_data']
+            
+            # Your existing transfer processing logic here
+            # Get recipient based on transfer type
+            recipient = None
+            if transfer_data['transfer_type'] == 'username':
+                recipient = User.query.filter_by(username=transfer_data['recipient_username']).first()
+            else:
+                recipient = User.query.filter_by(account_number=transfer_data['recipient_account']).first()
+            
+            # Validate recipient and perform transfer
+            if recipient and recipient.id != current_user.id:
+                if current_user.balance >= transfer_data['amount']:
+                    # Process transfer
+                    current_user.balance -= transfer_data['amount']
+                    recipient.balance += transfer_data['amount']
+                    
+                    # Create transaction record
+                    transaction = Transaction(
+                        sender_id=current_user.id,
+                        receiver_id=recipient.id,
+                        amount=transfer_data['amount'],
+                        transaction_type='transfer'
+                    )
+                    db.session.add(transaction)
+                    db.session.commit()
+                    
+                    # Clear transfer data from session
+                    session.pop('transfer_data', None)
+                    
+                    flash(f'Successfully transferred ₱{transfer_data["amount"]:.2f} to {recipient.username}.', 'success')
+                    return redirect(url_for('account'))
+                else:
+                    flash('Insufficient balance.', 'danger')
+            else:
+                flash('Invalid recipient.', 'danger')
+        else:
+            flash('Incorrect PIN. Please try again.', 'danger')
+    
+    # Get recipient info to display
+    transfer_data = session['transfer_data']
+    recipient_info = None
+    if transfer_data['transfer_type'] == 'username':
+        user = User.query.filter_by(username=transfer_data['recipient_username']).first()
+        if user:
+            recipient_info = f"{user.username} (Account: {user.account_number})"
+    else:
+        user = User.query.filter_by(account_number=transfer_data['recipient_account']).first()
+        if user:
+            recipient_info = f"{user.username} (Account: {user.account_number})"
+    
+    return render_template('verify_pin.html', form=form, 
+                          amount=transfer_data['amount'],
+                          recipient_info=recipient_info)
 
 @app.route('/execute_transfer', methods=['POST'])
 @login_required
@@ -257,6 +341,32 @@ def reset_password(token):
         flash('Your password has been reset.')
         return redirect(url_for('login'))
     return render_template('reset_password.html', form=form)
+
+def confirm_verification_token(token, expiration=3600):
+    serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+    return serializer.loads(token, salt='email-verify', max_age=expiration)
+
+@app.route('/verify_email/<token>')
+def verify_email(token):
+    try:
+        email = confirm_verification_token(token)
+    except:
+        flash('The verification link is invalid or has expired.', 'danger')
+        return redirect(url_for('login'))
+    
+    user = User.query.filter_by(email=email).first()
+    if user:
+        if user.status == 'active':
+            flash('Account is already verified. Please login.', 'info')
+        else:
+            user.status = 'active'
+            db.session.add(user)
+            db.session.commit()
+            flash('Your account has been verified! You can now log in.', 'success')
+    else:
+        flash('User not found.', 'danger')
+    
+    return redirect(url_for('login'))
 
 # Admin routes
 @app.route('/admin')
@@ -907,4 +1017,119 @@ def manager_transfers():
     return render_template('manager/transfers.html', 
                          title='Transfer Transactions', 
                          transactions=transactions,
-                         users=users) 
+                         users=users)
+
+@app.route('/test_email')
+def test_email():
+    try:
+        send_email(
+            to='your-personal-email@example.com',  # Use your actual email here
+            subject='Test Email from SimpleBankApp',
+            template='<h1>Test Email</h1><p>This is a test email from SimpleBankApp.</p>'
+        )
+        return 'Email sent successfully! Check your inbox.'
+    except Exception as e:
+        return f'Error sending email: {str(e)}'
+
+# Middleware to check if profile is complete
+@app.before_request
+def check_profile_completion():
+    if current_user.is_authenticated and not current_user.profile_complete:
+        # Allow access to logout, profile setup, and static resources
+        allowed_routes = ['logout', 'profile_setup', 'static']
+        if request.endpoint not in allowed_routes and not request.path.startswith('/static/'):
+            flash('Please complete your profile information first.', 'info')
+            return redirect(url_for('profile_setup'))
+
+@app.route('/profile_setup', methods=['GET', 'POST'])
+@login_required
+def profile_setup():
+    if current_user.profile_complete:
+        return redirect(url_for('profile'))
+        
+    form = ProfileForm()
+    if form.validate_on_submit():
+        current_user.first_name = form.first_name.data
+        current_user.last_name = form.last_name.data
+        current_user.phone_number = form.phone_number.data
+        current_user.address = form.address.data
+        current_user.date_of_birth = form.date_of_birth.data
+        current_user.profile_complete = True
+        
+        db.session.commit()
+        flash('Profile completed successfully!', 'success')
+        return redirect(url_for('index'))
+        
+    return render_template('profile_setup.html', form=form)
+
+@app.route('/profile')
+@login_required
+def profile():
+    return render_template('profile.html')
+
+@app.route('/edit_profile', methods=['GET', 'POST'])
+@login_required
+def edit_profile():
+    form = ProfileForm()
+    
+    if request.method == 'GET':
+        form.first_name.data = current_user.first_name
+        form.last_name.data = current_user.last_name
+        form.phone_number.data = current_user.phone_number
+        form.address.data = current_user.address
+        form.date_of_birth.data = current_user.date_of_birth
+    
+    if form.validate_on_submit():
+        current_user.first_name = form.first_name.data
+        current_user.last_name = form.last_name.data
+        current_user.phone_number = form.phone_number.data
+        current_user.address = form.address.data
+        current_user.date_of_birth = form.date_of_birth.data
+        
+        db.session.commit()
+        flash('Profile updated successfully!', 'success')
+        return redirect(url_for('profile'))
+        
+    return render_template('profile_setup.html', form=form, title="Edit Profile")
+
+@app.route('/setup_pin', methods=['GET', 'POST'])
+@login_required
+def setup_pin():
+    # If PIN is already set, redirect
+    if current_user.pin_set:
+        flash('You have already set up your PIN.', 'info')
+        return redirect(url_for('index'))
+        
+    form = SetupPINForm()
+    if form.validate_on_submit():
+        current_user.set_pin(form.pin.data)
+        db.session.commit()
+        flash('Your security PIN has been set successfully!', 'success')
+        return redirect(url_for('index'))
+        
+    return render_template('setup_pin.html', form=form)
+
+@app.route('/change_pin', methods=['GET', 'POST'])
+@login_required
+def change_pin():
+    form = ChangePINForm()
+    if form.validate_on_submit():
+        if current_user.check_pin(form.current_pin.data):
+            current_user.set_pin(form.new_pin.data)
+            db.session.commit()
+            flash('Your security PIN has been updated successfully!', 'success')
+            return redirect(url_for('profile'))
+        else:
+            flash('Current PIN is incorrect.', 'danger')
+    
+    return render_template('change_pin.html', form=form)
+
+@app.before_request
+def check_pin_setup():
+    # Only check for authenticated users
+    if current_user.is_authenticated and not current_user.is_admin:
+        # Check if PIN is set for relevant pages
+        transfer_related_endpoints = ['transfer', 'verify_transfer_pin']
+        if not current_user.pin_set and request.endpoint in transfer_related_endpoints:
+            flash('You need to set up a security PIN before making transfers.', 'warning')
+            return redirect(url_for('setup_pin'))
