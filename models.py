@@ -34,8 +34,20 @@ class User(UserMixin, db.Model):
     is_admin = db.Column(db.Boolean, default=False)  # Admin status
     is_manager = db.Column(db.Boolean, default=False)  # Manager status (can manage admins)
     date_registered = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    is_verified = db.Column(db.Boolean, default=False)
     transactions_sent = db.relationship('Transaction', foreign_keys='Transaction.sender_id', backref='sender', lazy='dynamic')
     transactions_received = db.relationship('Transaction', foreign_keys='Transaction.receiver_id', backref='receiver', lazy='dynamic')
+    # Profile fields
+    first_name = db.Column(db.String(100))
+    last_name = db.Column(db.String(100))
+    phone_number = db.Column(db.String(20))
+    address = db.Column(db.String(200))
+    date_of_birth = db.Column(db.Date)
+    profile_complete = db.Column(db.Boolean, default=False)
+    
+    # PIN security fields
+    pin_hash = db.Column(db.String(128))
+    pin_set = db.Column(db.Boolean, default=False)
     
     @property
     def full_address(self):
@@ -145,6 +157,17 @@ class User(UserMixin, db.Model):
         # Regular users can't manage anyone
         return False
 
+    def set_pin(self, pin):
+        """Set user's 6-digit PIN"""
+        self.pin_hash = bcrypt.generate_password_hash(pin).decode('utf-8')
+        self.pin_set = True
+        
+    def check_pin(self, pin):
+        """Verify the user's PIN"""
+        if not self.pin_hash:
+            return False
+        return bcrypt.check_password_hash(self.pin_hash, pin)
+
 class Transaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     sender_id = db.Column(db.Integer, db.ForeignKey('user.id'))
@@ -155,4 +178,4 @@ class Transaction(db.Model):
     details = db.Column(db.Text, nullable=True)  # For storing additional details (e.g., fields modified)
     
     def __repr__(self):
-        return f'<Transaction {self.id} - {self.amount}>' 
+        return f'<Transaction {self.id} - {self.amount}>'
