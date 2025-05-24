@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card-header">
+    <h4 class="login-title">Set Up Security PIN</h4>
+</div>
+
+<div class="alert alert-info mb-3">
+    You need to set up a 6-digit security PIN for transactions. This PIN will be required to authorize money transfers.
+</div>
+
+<form method="post" novalidate>
+    {{ form.hidden_tag() }}
+    
+    <div class="mb-3">
+        {{ form.pin.label(class="form-label") }}
+        <div class="input-group">
+            <span class="input-icon"><i class="bi bi-shield-lock"></i></span>
+            {{ form.pin(class="form-control", placeholder="Enter 6-digit PIN", id="pin", style="padding-left:2.5rem; padding-right:2.5rem;") }}
+            <span class="input-password-toggle" onclick="togglePassword('pin', this)">
+                <i class="bi bi-eye-slash"></i>
+            </span>
+        </div>
+        {% for error in form.pin.errors %}
+            <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+    </div>
+    
+    <div class="mb-3">
+        {{ form.confirm_pin.label(class="form-label") }}
+        <div class="input-group">
+            <span class="input-icon"><i class="bi bi-shield-lock-fill"></i></span>
+            {{ form.confirm_pin(class="form-control", placeholder="Confirm your PIN", id="confirm_pin", style="padding-left:2.5rem; padding-right:2.5rem;") }}
+            <span class="input-password-toggle" onclick="togglePassword('confirm_pin', this)">
+                <i class="bi bi-eye-slash"></i>
+            </span>
+        </div>
+        {% for error in form.confirm_pin.errors %}
+            <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+    </div>
+    
+    <div class="text-center mt-4">
+        {{ form.submit(class="btn btn-login") }}
+    </div>
+</form>
+{% endblock %}
