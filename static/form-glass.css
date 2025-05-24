@@ -1,0 +1,105 @@
+body {
+    /* More appealing gradient background */
+    background: linear-gradient(135deg, #172755 0%, #1e3a8a 50%, #1e3c72 100%);
+    min-height: 100vh;
+    position: relative;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(13, 23, 42, 0.2);
+    z-index: 0;
+    pointer-events: none;
+}
+
+.center-viewport {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.glass-card {
+    background: rgba(226, 232, 240, 0.85);
+    border-radius: 20px;
+    box-shadow: 0 10px 40px 0 rgba(15, 23, 42, 0.3), 0 0 0 1px rgba(255,255,255,0.15) inset;
+    border: 1px solid rgba(255,255,255,0.2);
+    backdrop-filter: blur(25px) saturate(180%);
+    -webkit-backdrop-filter: blur(25px) saturate(180%);
+    transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+    box-shadow: 0 12px 50px 0 rgba(15, 23, 42, 0.4), 0 0 0 1px rgba(255,255,255,0.25) inset;
+}
+
+.glass-card .card-header {
+    background: transparent;
+    border-bottom: none;
+    text-align: center;
+}
+
+.form-control {
+    border-radius: 12px;
+    border: 1.5px solid #b3d8fd;
+    background: #f8fbff;
+    font-size: 1.1rem;
+    padding-left: 2.5rem;
+}
+
+.input-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #3a8dde;
+    font-size: 1.2rem;
+}
+
+.input-group {
+    position: relative;
+}
+
+.btn-login, .btn-primary {
+    background: linear-gradient(90deg, #2563eb 0%, #3a8dde 100%);
+    border: none;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 1rem;
+    letter-spacing: 1px;
+    padding: 0.4rem 2.5rem;
+    box-shadow: 0 2px 8px rgba(58, 141, 222, 0.15);
+    transition: background 0.3s;
+    color: #fff;
+}
+
+.btn-login:hover, .btn-primary:hover {
+    background: linear-gradient(90deg, #3a8dde 0%, #2563eb 100%);
+}
+
+.login-links a {
+    color: #2563eb;
+    text-decoration: underline;
+    font-size: 0.97rem;
+}
+
+.login-links a:hover {
+    color: #174ea6;
+}
+
+.input-password-toggle {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #3a8dde;
+    z-index: 2;
+}
+
+.navbar-monochrome {
+    background: rgba(30, 41, 59, 0.95) !important;
+    backdrop-filter: blur(10px);
+}
