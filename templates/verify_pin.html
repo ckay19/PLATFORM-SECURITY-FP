@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card-header">
+    <h4 class="login-title">Verify Security PIN</h4>
+</div>
+
+<div class="alert alert-info mb-3">
+    Please enter your 6-digit security PIN to authorize this transaction.
+</div>
+
+<form method="post" novalidate>
+    {{ form.hidden_tag() }}
+    
+    <div class="mb-3">
+        {{ form.pin.label(class="form-label") }}
+        <div class="input-group">
+            <span class="input-icon"><i class="bi bi-shield-lock"></i></span>
+            {{ form.pin(class="form-control", placeholder="Enter 6-digit PIN", id="pin", style="padding-left:2.5rem; padding-right:2.5rem;") }}
+            <span class="input-password-toggle" onclick="togglePassword('pin', this)">
+                <i class="bi bi-eye-slash"></i>
+            </span>
+        </div>
+        {% for error in form.pin.errors %}
+            <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+    </div>
+    
+    <div class="text-center mt-4">
+        {{ form.submit(class="btn btn-login") }}
+    </div>
+</form>
+{% endblock %}
