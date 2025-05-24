@@ -367,6 +367,22 @@ def init_flask_app_db():
                 print(traceback.format_exc())
                 return False
             
+            # Create a migration script
+            try:
+                print("== Creating migration script for database changes ==")
+                # Add columns to User table
+                db.engine.execute('ALTER TABLE user ADD first_name VARCHAR(100)')
+                db.engine.execute('ALTER TABLE user ADD last_name VARCHAR(100)')
+                db.engine.execute('ALTER TABLE user ADD phone_number VARCHAR(20)')
+                db.engine.execute('ALTER TABLE user ADD address VARCHAR(200)')
+                db.engine.execute('ALTER TABLE user ADD date_of_birth DATE')
+                db.engine.execute('ALTER TABLE user ADD profile_complete BOOLEAN DEFAULT FALSE')
+                print("Migration script executed successfully!")
+            except Exception as migration_error:
+                print(f"Error creating migration script: {migration_error}")
+                print(traceback.format_exc())
+                return False
+            
             print("Flask application database initialized successfully!")
             return True
     except Exception as e:
@@ -398,4 +414,4 @@ if __name__ == "__main__":
         print("Make sure MySQL server is running and credentials are correct in .env file.")
         # Exit with error code
         import sys
-        sys.exit(1) 
+        sys.exit(1)
