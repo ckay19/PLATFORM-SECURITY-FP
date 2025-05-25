@@ -3,7 +3,11 @@ from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.urls import url_parse
 from app import app, csrf
 from extensions import db, limiter
-from forms import LoginForm, RegistrationForm, TransferForm, ResetPasswordRequestForm, ResetPasswordForm, DepositForm, UserEditForm, ConfirmTransferForm, ProfileForm, SetupPINForm, VerifyPINForm, ChangePINForm
+from forms import (
+    LoginForm, RegistrationForm, TransferForm, ResetPasswordRequestForm, ResetPasswordForm,
+    DepositForm, UserEditForm, ConfirmTransferForm, ProfileForm, SetupPINForm, VerifyPINForm, ChangePINForm,
+    CreateAdminForm  # <-- add this import
+)
 from models import User, Transaction
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired
 import os
@@ -746,7 +750,7 @@ def manager_dashboard():
 @manager_required
 @limiter.limit("10 per hour")
 def create_admin():
-    form = RegistrationForm()
+    form = CreateAdminForm()
     if form.validate_on_submit():
         admin = User(username=form.username.data, email=form.email.data, status='active', is_admin=True)
         admin.set_password(form.password.data)

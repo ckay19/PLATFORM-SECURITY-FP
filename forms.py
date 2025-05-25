@@ -219,3 +219,27 @@ class ChangePINForm(FlaskForm):
         EqualTo('new_pin', message='PINs must match')
     ])
     submit = SubmitField('Change PIN')
+
+class CreateAdminForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    password = PasswordField('Password', validators=[
+        DataRequired(),
+        strong_password,
+        EqualTo('password2', message='Passwords must match')
+    ])
+    password2 = PasswordField('Repeat Password', validators=[DataRequired()])
+    submit = SubmitField('Create Admin Account')
+
+    def validate_username(self, username):
+        user = User.query.filter_by(username=username.data).first()
+        if user is not None:
+            raise ValidationError('Please use a different username.')
+
+    def validate_email(self, email):
+        user = User.query.filter_by(email=email.data).first()
+        if user is not None:
+            raise ValidationError('Please use a different email address.')
+
+    def validate(self, extra_validators=None):
+        return super(CreateAdminForm, self).validate()
