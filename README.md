@@ -14,7 +14,7 @@
 
 ## 🔗 Presentation Link 
 
-- 
+- The Video is currently being edited
 
 - To view app click this link: [Simple Bank App](https://kayyy.pythonanywhere.com/login)
 
