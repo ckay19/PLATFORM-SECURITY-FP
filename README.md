@@ -1,4 +1,25 @@
-# Simple Banking App
+# PS_GROUP6_Final-Project
+
+### CSEC 322 - Platform Security 
+### Securing an Existing Banking Application - Security Assessment and Improvement of a Web-Based Banking Application
+**Date:** May 24, 2025
+
+## 👥 Group Members
+
+- Belano, Christine Kyla 
+- Pama, mar Laurence
+- Valera, Joshua Ean
+
+---
+
+## 🔗 Presentation Link 
+
+- 
+
+- To view app click this link: 
+
+--- 
+---# Simple Banking App
 
 A user-friendly and responsive Flask-based banking application designed for deployment on PythonAnywhere. This application allows users to create accounts, perform simulated money transfers between accounts, view transaction history, and securely manage their credentials.
 
