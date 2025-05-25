@@ -232,4 +232,15 @@ if __name__ == '__main__':
         init_db()
     
     print("Starting Flask server...")
-    app.run(debug=True)
+    # HTTPS SAFETY:
+    # For local development, use adhoc SSL for testing HTTPS:
+    #   app.run(debug=True, ssl_context='adhoc')
+    # For production, DO NOT use Flask's built-in server for HTTPS.
+    # Instead, use a WSGI server (gunicorn, uWSGI, etc.) behind a reverse proxy (nginx, Apache) with a valid SSL certificate.
+    import sys
+    if os.environ.get("FLASK_ENV") == "production":
+        print("WARNING: Do NOT use Flask's built-in server for production HTTPS. Use a WSGI server behind a reverse proxy with a valid SSL certificate.")
+        app.run(debug=False)  # Should only be used for debugging, not production
+    else:
+        # Local development: safe to use adhoc SSL for testing
+        app.run(debug=True, ssl_context='adhoc')
