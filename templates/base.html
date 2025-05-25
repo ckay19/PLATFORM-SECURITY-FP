@@ -84,6 +84,30 @@
             border-radius: 15px;
             overflow: hidden;
         }
+        /* Show dropdown on hover for desktop */
+        @media (min-width: 768px) {
+            .navbar-nav .dropdown:hover .dropdown-menu {
+                display: block;
+                margin-top: 0;
+            }
+        }
+        /* Ensure dropdown-menu is visible above glass effect */
+        .dropdown-menu {
+            z-index: 1050;
+        }
+        /* Optional: dark dropdown for contrast */
+        .dropdown-menu-dark {
+            background-color: #232946;
+            color: #fff;
+        }
+        .dropdown-menu-dark .dropdown-item {
+            color: #fff;
+        }
+        .dropdown-menu-dark .dropdown-item:hover,
+        .dropdown-menu-dark .dropdown-item:focus {
+            background-color: #343a40;
+            color: #fff;
+        }
     </style>
 </head>
 <body>
