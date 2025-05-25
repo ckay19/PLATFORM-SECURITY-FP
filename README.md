@@ -7,7 +7,7 @@
 ## 👥 Group Members
 
 - Belano, Christine Kyla 
-- Pama, mar Laurence
+- Pama, Mark Laurence
 - Valera, Joshua Ean
 
 ---
