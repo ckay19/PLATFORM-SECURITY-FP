@@ -372,13 +372,20 @@ def init_flask_app_db():
                 print("== Creating migration script for database changes ==")
                 # Add columns to User table using SQLAlchemy 2.x style
                 from sqlalchemy import text
+                columns_to_add = [
+                    ("first_name", "VARCHAR(100)"),
+                    ("last_name", "VARCHAR(100)"),
+                    ("phone_number", "VARCHAR(20)"),
+                    ("address", "VARCHAR(200)"),
+                    ("date_of_birth", "DATE"),
+                    ("profile_complete", "BOOLEAN DEFAULT FALSE"),
+                ]
                 with db.engine.connect() as conn:
-                    conn.execute(text('ALTER TABLE user ADD COLUMN first_name VARCHAR(100)'))
-                    conn.execute(text('ALTER TABLE user ADD COLUMN last_name VARCHAR(100)'))
-                    conn.execute(text('ALTER TABLE user ADD COLUMN phone_number VARCHAR(20)'))
-                    conn.execute(text('ALTER TABLE user ADD COLUMN address VARCHAR(200)'))
-                    conn.execute(text('ALTER TABLE user ADD COLUMN date_of_birth DATE'))
-                    conn.execute(text('ALTER TABLE user ADD COLUMN profile_complete BOOLEAN DEFAULT FALSE'))
+                    for col_name, col_type in columns_to_add:
+                        # Check if column exists
+                        result = conn.execute(text(f"SHOW COLUMNS FROM user LIKE '{col_name}'"))
+                        if not result.fetchone():
+                            conn.execute(text(f"ALTER TABLE user ADD COLUMN {col_name} {col_type}"))
                     conn.commit()
                 print("Migration script executed successfully!")
             except Exception as migration_error:
