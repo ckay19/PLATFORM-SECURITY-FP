@@ -16,7 +16,7 @@
 
 - 
 
-- To view app click this link: 
+- To view app click this link: https://joshuaean.pythonanywhere.com/login?next=%2Findex
 
 --- 
 
