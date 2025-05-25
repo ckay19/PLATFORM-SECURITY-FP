@@ -21,61 +21,142 @@
     </div>
 </div>
 
-<!-- Transaction History -->
-<h5 class="mb-3">Recent Transactions</h5>
+<!-- Transaction History with Scroll Toggle -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0">Recent Transactions</h5>
+    <button id="toggleHeight" class="btn btn-sm btn-outline-secondary">
+        <span id="toggleText">Expand</span> 
+        <i class="fas fa-chevron-down" id="toggleIcon"></i>
+    </button>
+</div>
 
-{% if transactions %}
-    {% for transaction in transactions %}
-        {% if transaction.sender_id == current_user.id %}
-            {% if transaction.transaction_type == 'deposit' and current_user.is_admin %}
-            <div class="transaction-item">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <strong>Admin Deposit to:</strong> {{ transaction.receiver.username }} ({{ transaction.receiver.account_number }})
-                        <div class="text-secondary small">{{ transaction.timestamp.strftime('%Y-%m-%d %H:%M') }}</div>
-                        <span class="badge bg-info">Over-the-counter deposit (Admin action)</span>
-                    </div>
-                    <div class="text-primary fw-bold">
-                        ₱{{ "%.2f"|format(transaction.amount) }}
+<div class="transaction-container" id="transactionContainer">
+    {% if transactions %}
+        {% for transaction in transactions %}
+            {% if transaction.sender_id == current_user.id %}
+                {% if transaction.transaction_type == 'deposit' and current_user.is_admin %}
+                <div class="transaction-item">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <strong>Admin Deposit to:</strong> {{ transaction.receiver.username }} ({{ transaction.receiver.account_number }})
+                            <div class="text-secondary small">{{ transaction.timestamp.strftime('%Y-%m-%d %H:%M') }}</div>
+                            <span class="badge bg-info">Over-the-counter deposit (Admin action)</span>
+                        </div>
+                        <div class="text-primary fw-bold">
+                            ₱{{ "%.2f"|format(transaction.amount) }}
+                        </div>
                     </div>
                 </div>
-            </div>
+                {% else %}
+                <div class="transaction-item sent">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <strong>Sent to:</strong> {{ transaction.receiver.username }} ({{ transaction.receiver.account_number }})
+                            <div class="text-secondary small">{{ transaction.timestamp.strftime('%Y-%m-%d %H:%M') }}</div>
+                        </div>
+                        <div class="text-danger fw-bold">
+                            -₱{{ "%.2f"|format(transaction.amount) }}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
             {% else %}
-            <div class="transaction-item sent">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <strong>Sent to:</strong> {{ transaction.receiver.username }} ({{ transaction.receiver.account_number }})
-                        <div class="text-secondary small">{{ transaction.timestamp.strftime('%Y-%m-%d %H:%M') }}</div>
-                    </div>
-                    <div class="text-danger fw-bold">
-                        -₱{{ "%.2f"|format(transaction.amount) }}
+                <div class="transaction-item received">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            {% if transaction.transaction_type == 'deposit' %}
+                                <strong>Deposit by:</strong> {{ transaction.sender.username }}
+                                <div class="text-secondary small">{{ transaction.timestamp.strftime('%Y-%m-%d %H:%M') }}</div>
+                                <span class="badge bg-info">Over-the-counter deposit</span>
+                            {% else %}
+                                <strong>Received from:</strong> {{ transaction.sender.username }} ({{ transaction.sender.account_number }})
+                                <div class="text-secondary small">{{ transaction.timestamp.strftime('%Y-%m-%d %H:%M') }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="text-success fw-bold">
+                            +₱{{ "%.2f"|format(transaction.amount) }}
+                        </div>
                     </div>
                 </div>
-            </div>
             {% endif %}
-        {% else %}
-            <div class="transaction-item received">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        {% if transaction.transaction_type == 'deposit' %}
-                            <strong>Deposit by:</strong> {{ transaction.sender.username }}
-                            <div class="text-secondary small">{{ transaction.timestamp.strftime('%Y-%m-%d %H:%M') }}</div>
-                            <span class="badge bg-info">Over-the-counter deposit</span>
-                        {% else %}
-                            <strong>Received from:</strong> {{ transaction.sender.username }} ({{ transaction.sender.account_number }})
-                            <div class="text-secondary small">{{ transaction.timestamp.strftime('%Y-%m-%d %H:%M') }}</div>
-                        {% endif %}
-                    </div>
-                    <div class="text-success fw-bold">
-                        +₱{{ "%.2f"|format(transaction.amount) }}
-                    </div>
-                </div>
-            </div>
-        {% endif %}
-    {% endfor %}
-{% else %}
-    <div class="text-center p-4">
-        <p class="text-muted">No transactions yet.</p>
-    </div>
-{% endif %}
+        {% endfor %}
+    {% else %}
+        <div class="text-center p-4">
+            <p class="text-muted">No transactions yet.</p>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    .transaction-container {
+        max-height: 300px;
+        overflow-y: auto;
+        transition: max-height 0.3s ease;
+        border: 1px solid rgba(0,0,0,0.1);
+        border-radius: 0.25rem;
+    }
+    
+    .transaction-container.expanded {
+        max-height: 600px;
+    }
+    
+    .transaction-item {
+        padding: 12px 15px;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+    
+    .transaction-item:last-child {
+        border-bottom: none;
+    }
+    
+    .transaction-item.received {
+        background-color: rgba(25, 135, 84, 0.05);
+    }
+    
+    .transaction-item.sent {
+        background-color: rgba(220, 53, 69, 0.05);
+    }
+    
+    /* Custom scrollbar */
+    .transaction-container::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    .transaction-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+    
+    .transaction-container::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 4px;
+    }
+    
+    .transaction-container::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const container = document.getElementById('transactionContainer');
+        const toggleBtn = document.getElementById('toggleHeight');
+        const toggleText = document.getElementById('toggleText');
+        const toggleIcon = document.getElementById('toggleIcon');
+        
+        toggleBtn.addEventListener('click', function() {
+            container.classList.toggle('expanded');
+            
+            if (container.classList.contains('expanded')) {
+                toggleText.textContent = 'Collapse';
+                toggleIcon.classList.remove('fa-chevron-down');
+                toggleIcon.classList.add('fa-chevron-up');
+            } else {
+                toggleText.textContent = 'Expand';
+                toggleIcon.classList.remove('fa-chevron-up');
+                toggleIcon.classList.add('fa-chevron-down');
+            }
+        });
+    });
+</script>
 {% endblock %}
