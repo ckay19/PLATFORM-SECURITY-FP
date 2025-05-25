@@ -395,35 +395,6 @@ if __name__ == "__main__":
     print("\nStep 1: Initializing MySQL database schema directly...")
     mysql_success = init_mysql_database()
     
-try:
-    print("== Creating migration script for database changes ==")
-    
-    # Import db from extensions before using it
-    from extensions import db
-    from sqlalchemy import text
-
-    # Check if columns exist before adding them
-    with db.engine.connect() as conn:
-        # For each column we want to add
-        for column_name in ['first_name', 'last_name', 'phone_number', 'address', 'date_of_birth', 'profile_complete']:
-            # Check if column exists
-            result = conn.execute(text(f"SHOW COLUMNS FROM user LIKE '{column_name}'"))
-            column_exists = result.fetchone() is not None
-            
-            # Only add if it doesn't exist
-            if not column_exists:
-                data_type = 'BOOLEAN DEFAULT FALSE' if column_name == 'profile_complete' else \
-                           'DATE' if column_name == 'date_of_birth' else 'VARCHAR(100)'
-                conn.execute(text(f"ALTER TABLE user ADD {column_name} {data_type}"))
-                print(f"Added column {column_name}")
-                
-    print("Migration script executed successfully!")
-except Exception as migration_error:
-    print(f"Error creating migration script: {migration_error}")
-    print(traceback.format_exc())
-    # Continue even if migration has issues, since tables are already created
-    # return False - Remove this to continue even if migration fails
-    
 if __name__ == "__main__":
     print("== Simple Banking App Database Initialization ==")
     print("\nStep 1: Initializing MySQL database schema directly...")
