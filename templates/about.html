@@ -1,88 +1,149 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="card shadow">
-        <div class="card-body">
-            <h1 class="card-title text-center mb-4">About SimpleBankApp</h1>
-            
-            <div class="row mb-4">
-                <div class="col-md-6">
-                    <h3>Our Mission</h3>
-                    <p>SimpleBankApp is designed to provide a secure, intuitive, and reliable digital banking experience. Our mission is to make financial services accessible to everyone while maintaining the highest standards of security and user experience.</p>
-                </div>
-                <div class="col-md-6">
-                    <h3>Who We Are</h3>
-                    <p>We are a team of financial technology experts committed to creating innovative solutions for the modern banking industry. Our application combines robust security features with a user-friendly interface to deliver a seamless banking experience.</p>
+<style>
+    /* Override base template styles for the about page */
+    .center-viewport {
+        height: auto;
+        padding: 1rem 0;
+    }
+    .center-viewport > div {
+        width: 95%;
+        max-width: 1500px;
+    }
+    .glass-card {
+        width: 100%;
+        background-color: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+    .about-header {
+        color: #1a2a5e;
+        font-size: 2rem;
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 1rem;
+        letter-spacing: -0.5px;
+    }
+    .about-section {
+        background-color: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 16px rgba(31, 38, 135, 0.1);
+        padding: 1rem;
+        height: 100%;
+        border-left: 4px solid #3a4db9;
+    }
+    .tech-box {
+        background: linear-gradient(135deg, #f8f9ff 0%, #eef1ff 100%);
+        border-radius: 10px;
+        padding: 0.75rem;
+        transition: all 0.3s ease;
+        border-bottom: 3px solid transparent;
+    }
+    .tech-box:hover {
+        border-bottom: 3px solid #3a4db9;
+    }
+    .text-primary-custom { color: #22336c; }
+    .text-secondary-custom { color: #3a4db9; }
+    .text-accent { color: #4f5fc9; }
+    .feature-list li {
+        padding: 4px 0;
+        border-bottom: 1px solid #eaecf8;
+    }
+    .feature-list li:last-child {
+        border-bottom: none;
+    }
+</style>
+
+<div class="container-fluid py-3">
+    <div class="glass-card p-3">
+        <h1 class="about-header mb-3">About SimpleBankApp</h1>
+        
+        <div class="row g-3">
+            <!-- Left side: Mission -->
+            <div class="col-lg-7">
+                <div class="about-section h-100">
+                    <h4 class="fw-bold mb-2 text-primary-custom pb-1 border-bottom">Our Mission</h4>
+                    <p class="mb-2" style="color: #444; font-size: 1rem;">
+                        SimpleBankApp stands out for its comprehensive features and responsive support—offering secure, modern banking for everyone, on your terms and timeline.
+                    </p>
+                    <p class="fw-bold mb-2 text-secondary-custom" style="font-size: 1rem;">
+                        We are committed to security, transparency, and user empowerment—especially when it comes to protecting your finances and making banking easy for all.
+                    </p>
+                    <p class="mb-0" style="color: #444; font-size: 1rem;">
+                        Our platform brings together the best of technology and banking expertise, ensuring seamless transactions, robust account management, and a user-friendly experience.
+                    </p>
                 </div>
             </div>
             
-            <div class="row mb-4">
-                <div class="col-md-6">
-                    <h3>Key Features</h3>
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item">Secure user authentication</li>
-                        <li class="list-group-item">Role-based access control</li>
-                        <li class="list-group-item">Instant money transfers</li>
-                        <li class="list-group-item">Transaction history tracking</li>
-                        <li class="list-group-item">Admin and manager dashboards</li>
-                        <li class="list-group-item">Philippine location data integration</li>
-                    </ul>
-                </div>
-                <div class="col-md-6">
-                    <h3>Security Measures</h3>
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item">Password hashing with bcrypt</li>
-                        <li class="list-group-item">CSRF protection on all forms</li>
-                        <li class="list-group-item">Rate limiting to prevent abuse</li>
-                        <li class="list-group-item">Secure session management</li>
-                        <li class="list-group-item">Two-step transaction confirmation</li>
-                        <li class="list-group-item">Admin approval workflow for new accounts</li>
-                    </ul>
+            <!-- Right side: Features & Security -->
+            <div class="col-lg-5">
+                <div class="about-section h-100">
+                    <h4 class="fw-bold mb-2 text-primary-custom pb-1 border-bottom">Features & Security</h4>
+                    <div class="row">
+                        <div class="col-6">
+                            <h6 class="text-secondary-custom fw-bold mb-1 small">Key Features</h6>
+                            <ul class="list-unstyled feature-list small">
+                                <li><i class="bi bi-shield-check me-1 text-accent"></i>Secure authentication</li>
+                                <li><i class="bi bi-person-check me-1 text-accent"></i>Role-based access</li>
+                                <li><i class="bi bi-currency-exchange me-1 text-accent"></i>Instant transfers</li>
+                                <li><i class="bi bi-clock-history me-1 text-accent"></i>Transaction history</li>
+                                <li><i class="bi bi-speedometer me-1 text-accent"></i>Admin dashboards</li>
+                                <li><i class="bi bi-geo-alt me-1 text-accent"></i>PH location data</li>
+                            </ul>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="text-secondary-custom fw-bold mb-1 small">Security Measures</h6>
+                            <ul class="list-unstyled feature-list small">
+                                <li><i class="bi bi-lock me-1 text-accent"></i>Password hashing</li>
+                                <li><i class="bi bi-shield me-1 text-accent"></i>CSRF protection</li>
+                                <li><i class="bi bi-speedometer2 me-1 text-accent"></i>Rate limiting</li>
+                                <li><i class="bi bi-key me-1 text-accent"></i>Session security</li>
+                                <li><i class="bi bi-check-circle me-1 text-accent"></i>2-step confirm</li>
+                                <li><i class="bi bi-person-plus me-1 text-accent"></i>Admin approval</li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </div>
-            
-            <div class="row">
-                <div class="col-12">
-                    <h3>Our Technology Stack</h3>
-                    <p>SimpleBankApp is built using modern web technologies to ensure reliability and performance:</p>
-                    <div class="row text-center">
-                        <div class="col-md-3 mb-3">
-                            <div class="card h-100">
-                                <div class="card-body">
-                                    <h5>Backend</h5>
-                                    <p>Python with Flask framework</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <div class="card h-100">
-                                <div class="card-body">
-                                    <h5>Database</h5>
-                                    <p>MySQL with SQLAlchemy ORM</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <div class="card h-100">
-                                <div class="card-body">
-                                    <h5>Frontend</h5>
-                                    <p>HTML, CSS, Bootstrap 5</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <div class="card h-100">
-                                <div class="card-body">
-                                    <h5>Security</h5>
-                                    <p>Flask-Limiter, Flask-Login, Flask-Bcrypt</p>
-                                </div>
-                            </div>
-                        </div>
+        </div>
+        
+        <!-- Technology Stack - Horizontal row -->
+        <div class="about-section mt-3">
+            <h4 class="fw-bold mb-2 text-primary-custom text-center pb-1 border-bottom">Our Technology Stack</h4>
+            <div class="row text-center g-2">
+                <div class="col-md-3 col-6">
+                    <div class="tech-box">
+                        <i class="bi bi-code-square me-1 text-secondary-custom"></i>
+                        <span class="fw-bold text-primary-custom">Backend:</span>
+                        <span>Python with Flask</span>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="tech-box">
+                        <i class="bi bi-database me-1 text-secondary-custom"></i>
+                        <span class="fw-bold text-primary-custom">Database:</span>
+                        <span>MySQL &amp; SQLAlchemy</span>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="tech-box">
+                        <i class="bi bi-layout-text-window me-1 text-secondary-custom"></i>
+                        <span class="fw-bold text-primary-custom">Frontend:</span>
+                        <span>HTML, CSS, Bootstrap 5</span>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="tech-box">
+                        <i class="bi bi-shield-lock me-1 text-secondary-custom"></i>
+                        <span class="fw-bold text-primary-custom">Security:</span>
+                        <span>Flask-Login, Flask-Bcrypt</span>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-{% endblock %} 
+{% endblock %}
