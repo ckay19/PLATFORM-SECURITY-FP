@@ -12,31 +12,32 @@ pymysql==1.1.0
 cryptography
 requests==2.31.0
 Flask-Limiter==3.5.0
+
 # Core Framework
-Flask==2.3.0
-Werkzeug==2.3.0
+Flask==2.0.3
+Werkzeug==2.0.3
 
 # Database
-Flask-SQLAlchemy==3.0.5
-SQLAlchemy==2.0.21
-PyMySQL==1.1.0
+Flask-SQLAlchemy==2.5.1
+SQLAlchemy==1.4.46
+PyMySQL==1.0.2
 
 # Authentication & Security
 Flask-Login==0.6.2
 Flask-Bcrypt==1.0.1
-Flask-WTF==1.1.1
+Flask-WTF==1.0.1
 WTForms==3.0.1
-itsdangerous==2.1.2
-Flask-Limiter==3.5.0
+itsdangerous==2.0.1
+Flask-Limiter==2.8.1
 
 # Email Support
 Flask-Mail==0.9.1
 
 # Environment Variables
-python-dotenv==1.0.0
+python-dotenv==0.21.1
 
 # Database Migrations
-Flask-Migrate==4.0.5
+Flask-Migrate==4.0.4
 
 # Production Server (optional)
 gunicorn==21.2.0
