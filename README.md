@@ -19,7 +19,8 @@
 - To view app click this link: 
 
 --- 
----# Simple Banking App
+
+# Simple Banking App
 
 A user-friendly and responsive Flask-based banking application designed for deployment on PythonAnywhere. This application allows users to create accounts, perform simulated money transfers between accounts, view transaction history, and securely manage their credentials.
 
